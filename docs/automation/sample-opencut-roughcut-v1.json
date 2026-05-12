@@ -1,0 +1,80 @@
+{
+	"schema": "opencut-roughcut-v1",
+	"project": {
+		"name": "TikTok rough cut",
+		"canvasSize": {
+			"width": 1080,
+			"height": 1920
+		},
+		"fps": {
+			"numerator": 30,
+			"denominator": 1
+		},
+		"background": {
+			"type": "color",
+			"color": "#000000"
+		}
+	},
+	"media": [
+		{
+			"id": "media-input",
+			"path": "input.mp4",
+			"type": "video",
+			"name": "input.mp4",
+			"durationSeconds": 30,
+			"width": null,
+			"height": null,
+			"fps": null,
+			"hasAudio": null
+		}
+	],
+	"clips": [
+		{
+			"id": "clip-1",
+			"mediaId": "media-input",
+			"type": "video",
+			"timelineStartSeconds": 0,
+			"sourceStartSeconds": 2,
+			"durationSeconds": 28,
+			"params": {
+				"transform.positionX": 0,
+				"transform.positionY": 0,
+				"transform.scaleX": 1,
+				"transform.scaleY": 1,
+				"transform.rotate": 0,
+				"opacity": 1,
+				"blendMode": "normal",
+				"volume": 0,
+				"muted": false
+			},
+			"cropZoomKeyframes": []
+		}
+	],
+	"captions": [
+		{
+			"text": "MAKE IT PUNCHY",
+			"startTimeSeconds": 0.3,
+			"durationSeconds": 0.9,
+			"style": {
+				"fontFamily": "Arial",
+				"fontSize": 7,
+				"color": "#ffffff",
+				"fontWeight": "bold",
+				"textAlign": "center",
+				"placement": {
+					"verticalAlign": "bottom",
+					"marginVerticalRatio": 0.08
+				}
+			}
+		}
+	],
+	"metadata": {
+		"prompt": "Take input.mp4, make it vertical 9:16, remove dead air, trim the first 2 seconds, add punchy subtitles, and prepare a TikTok-ready rough cut.",
+		"generator": "OpenCut roughcut prototype",
+		"createdAt": "2026-05-12T00:00:00.000Z",
+		"notes": [
+			"Intermediate automation format; import through the OpenCut rough-cut importer rather than treating this as a native project file.",
+			"Silence removal is represented by future clip segmentation. This prototype only applies the requested leading trim."
+		]
+	}
+}

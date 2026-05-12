@@ -15,10 +15,14 @@
     "dev:web": "turbo run dev --filter=@opencut/web",
     "format:web": "prettier apps/web/src/services/renderer --write",
     "generate:fonts": "npx tsx apps/web/scripts/generate-font-sprites.ts",
+    "generate:roughcut": "bun apps/web/scripts/generate-roughcut.ts",
     "lint:web": "eslint apps/web/src --ext .ts,.tsx",
     "lint:web:fix": "eslint apps/web/src --ext .ts,.tsx --fix",
     "preview:web": "turbo run preview --filter=@opencut/web",
     "publish:wasm": "bun run build:wasm && npm publish rust/wasm/pkg --access public",
+    "render:roughcut": "bun apps/web/scripts/render-roughcut.ts",
+    "roughcut:gui": "bun run dev:web",
+    "roughcut:mcp": "bun apps/web/scripts/roughcut-mcp.ts",
     "start:tools": "turbo run start --filter=@opencut/tools",
     "test": "bun test"
   },
@@ -32,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@next/eslint-plugin-next": "^16.2.4",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
@@ -42,7 +47,8 @@
     "prettier": "^3.8.3",
     "turbo": "^2.8.20",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.59.0"
+    "typescript-eslint": "^8.59.0",
+    "zod": "^4.4.3"
   },
   "trustedDependencies": [
     "@tailwindcss/oxide"

@@ -20,6 +20,7 @@ bun.lockb
 .cursor/
 
 .open-next
+.playwright-cli
 
 target/
 

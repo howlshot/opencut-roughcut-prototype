@@ -1,167 +1,177 @@
-<table width="100%">
-  <tr>
-    <td align="left" width="120">
-      <img src="apps/web/public/logos/opencut/icon.svg" alt="OpenCut Logo" width="100" />
-    </td>
-    <td align="right">
-      <h1>OpenCut</h1>
-      <h3 style="margin-top: -10px;">A free, open-source video editor for web, desktop, and mobile.</h3>
-    </td>
-  </tr>
-</table>
+# OpenCut Rough-Cut Prototype
 
-## Sponsors
+Local AI-assisted rough-cut tooling for TikTok, Shorts, and Reels.
 
-Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss) and [fal.ai](https://fal.ai?utm_source=github-opencut&utm_campaign=oss) for their support of open-source software.
+This prototype takes a local video file and generates:
 
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
+- a vertical `1080x1920` MP4 rough cut
+- editable `.srt` captions for CapCut
+- a transcript JSON
+- an intermediate rough-cut JSON
+- an optional burned-caption preview
 
-<a href="https://fal.ai">
-  <img alt="Powered by fal.ai" src="https://img.shields.io/badge/Powered%20by-fal.ai-000000?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCAxMEwxMy4wOSAxNS43NEwxMiAyMkwxMC45MSAxNS43NEw0IDEwTDEwLjkxIDguMjZMMTIgMloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" />
-</a>
+It is built on top of the [OpenCut](https://github.com/OpenCut-app/OpenCut) web app while the automation pipeline is being explored. The current practical workflow is to use this app to generate a CapCut-ready rough cut, then polish the video and captions manually in CapCut.
 
-## Why?
+## Status
 
-- **Privacy**: Your videos stay on your device
-- **Free features**: Most basic CapCut features are now paywalled 
-- **Simple**: People want editors that are easy to use - CapCut proved that
+This is a working prototype, not a polished product.
 
-## Project Structure
+What works:
 
-- `apps/web/`: Next.js web application
-- `apps/desktop/`: Native desktop app built with GPUI (in progress)
-- `rust/`: Platform-agnostic core: GPU compositor, effects, masks, and WASM bindings. We're actively migrating business logic here from TypeScript.
-- `docs/`: Architecture and subsystem documentation
+- browser-based local GUI for selecting a video
+- FFprobe metadata detection
+- FFmpeg silence detection and rough-cut rendering
+- local Whisper transcription through `whisper.cpp`
+- transcript-aware protection for quiet opening speech
+- caption chunking tuned for short-form social videos
+- SRT export for CapCut
+- optional MCP wrapper for agent workflows
 
-## Getting Started
+What is intentionally deferred:
 
-### Prerequisites
+- cloud transcription APIs
+- Whisper installation automation
+- full timeline editor UX
+- visual crop/zoom/keyframe decisions
+- direct CapCut project generation
+- OpenCut renderer/export/WASM changes
 
+## Requirements
+
+- macOS or another local machine with shell access
 - [Bun](https://bun.sh/docs/installation)
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- [FFmpeg](https://ffmpeg.org/) with `ffmpeg` and `ffprobe` on `PATH`
+- `whisper.cpp` CLI on `PATH` as `whisper-cli`
+- a local whisper.cpp model, for example:
+  - `~/.cache/whisper.cpp/ggml-small.en.bin`
+  - `~/.cache/whisper.cpp/ggml-base.en.bin`
 
-> **Note:** Docker is optional but recommended for running the local database and Redis. If you only want to work on frontend features, you can skip it.
-
-### Setup
-
-1. Fork and clone the repository
-
-2. Copy the environment file:
-
-   ```bash
-   # Unix/Linux/Mac
-   cp apps/web/.env.example apps/web/.env.local
-
-   # Windows PowerShell
-   Copy-Item apps/web/.env.example apps/web/.env.local
-   ```
-
-3. Start the database and Redis:
-
-   ```bash
-   docker compose up -d db redis serverless-redis-http
-   ```
-
-4. Install dependencies and start the dev server:
-
-   ```bash
-   bun install
-   bun dev:web
-   ```
-
-The application will be available at [http://localhost:3000](http://localhost:3000).
-
-The `.env.example` has sensible defaults that match the Docker Compose config — it should work out of the box.
-
-### Desktop setup
-
-Desktop is opt-in. If you're only working on the web app, skip this entirely.
-
-If you want to get ready for `apps/desktop`, see [`apps/desktop/README.md`](apps/desktop/README.md). It's a two-step setup: Rust toolchain first, then desktop native dependencies.
-
-### Local WASM development
-
-Only needed if you're editing `rust/wasm` and want the web app to use your local build instead of the published package.
-
-**Prerequisites** — install these once before anything else:
+On macOS with Homebrew:
 
 ```bash
-# Rust toolchain
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# build the WASM package
-cargo install wasm-pack
-
-# reruns the build on file changes, used by bun dev:wasm
-cargo install cargo-watch
+brew install ffmpeg whisper-cpp
 ```
 
-1. Build the package once from the repo root:
+Download a model using your preferred whisper.cpp model workflow. This prototype currently looks for:
 
-   ```bash
-   bun run build:wasm
-   ```
+```text
+~/.cache/whisper.cpp/ggml-small.en.bin
+~/.cache/whisper.cpp/ggml-base.en.bin
+```
 
-2. Register the generated package for linking:
-
-   ```bash
-   cd rust/wasm/pkg
-   bun link
-   ```
-
-3. Link `apps/web` to the local package:
-
-   ```bash
-   cd apps/web
-   bun link opencut-wasm
-   ```
-
-4. Rebuild on changes while you work:
-
-   ```bash
-   bun dev:wasm
-   ```
-
-To switch `apps/web` back to the published package, run:
+## Setup
 
 ```bash
-cd apps/web
-bun add opencut-wasm
+bun install
+bun run roughcut:gui
 ```
 
-### Self-Hosting with Docker
+Open:
 
-To run everything (including a production build of the app) in Docker:
+```text
+http://localhost:3000/automation/roughcut-gui
+```
+
+## GUI Workflow
+
+1. Choose a local video file.
+2. Leave `Cut dead air` enabled.
+3. Leave `Trim start` at `0` unless you explicitly want to remove the opening.
+4. Keep `Render burned-caption preview` enabled if you want a quick visual timing check.
+5. Click `Generate files`.
+6. Import these generated files into CapCut:
+   - `capcut-clean.mp4`
+   - `captions.srt`
+
+The generated files are written under:
+
+```text
+~/Downloads/roughcut-gui/
+```
+
+## CapCut Import
+
+Use CapCut Desktop or CapCut Web.
+
+1. Create a new CapCut project.
+2. Import `capcut-clean.mp4`.
+3. Drag the video onto the timeline.
+4. Open the captions/subtitles area.
+5. Import `captions.srt`.
+6. Polish caption wording, timing, style, and edits manually.
+
+CapCut mobile does not reliably support direct SRT import.
+
+## CLI Workflow
+
+Generate rough-cut JSON:
 
 ```bash
-docker compose up -d
+bun run generate:roughcut --video input.mp4 --auto-silence-cut --auto-transcribe --captions-from-transcript --roughcut-out roughcut.json --transcript-out transcript.json
 ```
 
-The app will be available at [http://localhost:3100](http://localhost:3100).
+Render a clean MP4:
 
-## Contributing
+```bash
+bun run render:roughcut --roughcut roughcut.json --out capcut-clean.mp4 --no-captions
+```
 
-We welcome contributions! While we're actively developing and refactoring certain areas, there are plenty of opportunities to contribute effectively.
+Render a burned-caption preview:
 
-**🎯 Focus areas:** Timeline functionality, project management, performance, bug fixes, and UI improvements outside the preview panel.
+```bash
+bun run render:roughcut --roughcut roughcut.json --out preview-burned-captions.mp4
+```
 
-**⚠️ Avoid for now:** Preview panel enhancements (fonts, stickers, effects) and export functionality - we're refactoring these with a new binary rendering approach.
+## MCP Server
 
-See our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions, development guidelines, and complete focus area guidance.
+The prototype includes a thin MCP wrapper around the same rough-cut modules.
 
-**Quick start for contributors:**
+```bash
+bun run roughcut:mcp
+```
 
-- Fork the repo and clone locally
-- Follow the setup instructions in CONTRIBUTING.md
-- Working on `apps/desktop`? See [`apps/desktop/README.md`](apps/desktop/README.md) for setup
-- Create a feature branch and submit a PR
+See:
 
-## License
+```text
+docs/automation/opencut-roughcut-mcp.md
+```
 
-[MIT LICENSE](LICENSE)
+## Tests
 
----
+Focused rough-cut tests:
 
-![Star History Chart](https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date)
+```bash
+bun test apps/web/src/automation/roughcut
+```
+
+Full upstream OpenCut tests may currently fail on unrelated upstream/local issues. See:
+
+```text
+docs/automation/roughcut-known-repo-issues.md
+```
+
+## Architecture
+
+Main rough-cut modules:
+
+```text
+apps/web/src/automation/roughcut/
+apps/web/scripts/roughcut/
+apps/web/src/app/automation/roughcut-gui/
+apps/web/src/app/api/automation/roughcut-gui/
+```
+
+The generated rough-cut JSON is an intermediate format, not a stable public OpenCut project format. The practical handoff format today is:
+
+- MP4 for video
+- SRT for editable captions
+
+## Attribution
+
+This repo is based on OpenCut, an MIT-licensed open-source video editor:
+
+```text
+https://github.com/OpenCut-app/OpenCut
+```
+
+OpenCut license terms remain in `LICENSE`.
