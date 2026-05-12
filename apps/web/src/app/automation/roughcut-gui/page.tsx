@@ -380,9 +380,8 @@ function PrimaryFileAction({
 }) {
 	return (
 		<a
-			href={file.url}
-			target="_blank"
-			rel="noreferrer"
+			href={downloadUrl({ file })}
+			download
 			className="bg-primary text-primary-foreground hover:opacity-90 flex flex-col gap-2 rounded-md px-4 py-4 text-sm"
 		>
 			<span className="text-base font-semibold">{label}</span>
@@ -392,6 +391,11 @@ function PrimaryFileAction({
 			</span>
 		</a>
 	);
+}
+
+function downloadUrl({ file }: { file: FileLink }) {
+	const separator = file.url.includes("?") ? "&" : "?";
+	return `${file.url}${separator}download=1`;
 }
 
 function FileAction({ label, file }: { label: string; file: FileLink }) {

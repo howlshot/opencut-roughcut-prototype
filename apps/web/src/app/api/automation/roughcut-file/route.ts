@@ -18,16 +18,25 @@ export async function GET(request: NextRequest) {
 	}
 
 	const data = await readFile(path);
+	const shouldDownload = request.nextUrl.searchParams.get("download") === "1";
 	return new Response(data, {
 		headers: {
 			"Content-Type": contentTypeForPath({ path }),
-			"Content-Disposition": `${contentDispositionForPath({ path })}; filename="${basename(path).replaceAll('"', "")}"`,
+			"Content-Disposition": `${contentDispositionForPath({ path, shouldDownload })}; filename="${basename(path).replaceAll('"', "")}"`,
 		},
 	});
 }
 
-function contentDispositionForPath({ path }: { path: string }) {
-	return path.toLowerCase().endsWith(".zip") ? "attachment" : "inline";
+function contentDispositionForPath({
+	path,
+	shouldDownload,
+}: {
+	path: string;
+	shouldDownload: boolean;
+}) {
+	return shouldDownload || path.toLowerCase().endsWith(".zip")
+		? "attachment"
+		: "inline";
 }
 
 function contentTypeForPath({ path }: { path: string }) {
