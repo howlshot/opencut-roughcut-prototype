@@ -73,6 +73,12 @@ Open:
 http://localhost:3000/automation/roughcut-gui
 ```
 
+On macOS, you can also double-click:
+
+```text
+scripts/Launch Rough Cut.command
+```
+
 ## GUI Workflow
 
 1. Choose a local video file.
