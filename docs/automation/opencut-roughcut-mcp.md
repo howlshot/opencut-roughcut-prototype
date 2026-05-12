@@ -43,9 +43,9 @@ checkout:
 		"opencut-roughcut": {
 			"command": "bun",
 			"args": [
-				"/Users/david/Documents/New project/OpenCut/apps/web/scripts/roughcut-mcp.ts"
+				"/absolute/path/to/opencut-roughcut-prototype/apps/web/scripts/roughcut-mcp.ts"
 			],
-			"cwd": "/Users/david/Documents/New project/OpenCut"
+			"cwd": "/absolute/path/to/opencut-roughcut-prototype"
 		}
 	}
 }

@@ -8,11 +8,6 @@ import {
 	type RoughCutDocument,
 } from "@/automation/roughcut";
 
-const DEFAULT_JSON_PATH =
-	"/Users/david/Downloads/whatsapp-opencut-roughcut.json";
-const DEFAULT_VIDEO_PATH =
-	"/Users/david/Downloads/WhatsApp Video 2026-05-12 at 08.54.56.mp4";
-
 export default function RoughCutAutoImportPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -20,8 +15,8 @@ export default function RoughCutAutoImportPage() {
 	const [error, setError] = useState<string | null>(null);
 	const paths = useMemo(
 		() => ({
-			jsonPath: searchParams.get("jsonPath") ?? DEFAULT_JSON_PATH,
-			videoPath: searchParams.get("videoPath") ?? DEFAULT_VIDEO_PATH,
+			jsonPath: searchParams.get("jsonPath") ?? "",
+			videoPath: searchParams.get("videoPath") ?? "",
 		}),
 		[searchParams],
 	);
@@ -31,6 +26,12 @@ export default function RoughCutAutoImportPage() {
 
 		const runImport = async () => {
 			try {
+				if (!paths.jsonPath || !paths.videoPath) {
+					throw new Error(
+						"Pass jsonPath and videoPath query parameters to auto-import a rough cut.",
+					);
+				}
+
 				setStatus("Loading rough-cut JSON...");
 				const roughCut = await fetchJson({ path: paths.jsonPath });
 				const mediaId = roughCut.media[0]?.id;

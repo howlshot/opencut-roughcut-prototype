@@ -1,4 +1,5 @@
 import { mkdir, stat, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { basename, extname, join } from "node:path";
 import { NextRequest } from "next/server";
 import { generateRoughCutDocument } from "@/automation/roughcut/generate";
@@ -20,8 +21,18 @@ import type { CaptionStylePreset } from "@/automation/roughcut/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DEFAULT_SMALL_MODEL = "/Users/david/.cache/whisper.cpp/ggml-small.en.bin";
-const DEFAULT_BASE_MODEL = "/Users/david/.cache/whisper.cpp/ggml-base.en.bin";
+const DEFAULT_SMALL_MODEL = join(
+	homedir(),
+	".cache",
+	"whisper.cpp",
+	"ggml-small.en.bin",
+);
+const DEFAULT_BASE_MODEL = join(
+	homedir(),
+	".cache",
+	"whisper.cpp",
+	"ggml-base.en.bin",
+);
 const DEFAULT_TRANSCRIPTION_PROMPT =
 	"Canyon Ranch, Dr. Jen Wagner, Dr. Sadio Lucio, wellness, Botox, ice baths, morning routine, stretching, protein coffee, mindset, positive affirmations, sleep, midlife women, strength training.";
 
@@ -50,7 +61,9 @@ export async function POST(request: NextRequest) {
 			requestedModelPath: options.modelPath,
 		});
 		const outputDir = join(
-			"/Users/david/Downloads/roughcut-gui",
+			homedir(),
+			"Downloads",
+			"roughcut-gui",
 			`${safeBaseName({ name: video.name })}-${Date.now()}`,
 		);
 		await mkdir(outputDir, { recursive: true });
