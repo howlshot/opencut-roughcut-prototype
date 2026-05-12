@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 type FileLink = { path: string; url: string };
+type CutStrength = "smooth" | "natural" | "tight" | "hard";
 
 interface GuiResult {
 	outputDir: string;
@@ -24,6 +25,50 @@ interface GuiResult {
 
 const DEFAULT_PROMPT =
 	"Canyon Ranch, Dr. Jen Wagner, Dr. Sadio Lucio, wellness, Botox, ice baths, morning routine, stretching, protein coffee, mindset, positive affirmations, sleep, midlife women, strength training.";
+const CUT_STRENGTH_SETTINGS: Record<
+	CutStrength,
+	{
+		label: string;
+		silenceThreshold: string;
+		minSilenceDurationSeconds: string;
+		preSpeechPaddingSeconds: string;
+		postSpeechPaddingSeconds: string;
+		minKeepSegmentSeconds: string;
+	}
+> = {
+	smooth: {
+		label: "Smooth",
+		silenceThreshold: "-38dB",
+		minSilenceDurationSeconds: "1.0",
+		preSpeechPaddingSeconds: "0.35",
+		postSpeechPaddingSeconds: "0.45",
+		minKeepSegmentSeconds: "1.0",
+	},
+	natural: {
+		label: "Natural",
+		silenceThreshold: "-35dB",
+		minSilenceDurationSeconds: "0.8",
+		preSpeechPaddingSeconds: "0.25",
+		postSpeechPaddingSeconds: "0.35",
+		minKeepSegmentSeconds: "0.8",
+	},
+	tight: {
+		label: "Tight",
+		silenceThreshold: "-35dB",
+		minSilenceDurationSeconds: "0.55",
+		preSpeechPaddingSeconds: "0.12",
+		postSpeechPaddingSeconds: "0.18",
+		minKeepSegmentSeconds: "0.45",
+	},
+	hard: {
+		label: "Hard",
+		silenceThreshold: "-32dB",
+		minSilenceDurationSeconds: "0.35",
+		preSpeechPaddingSeconds: "0.06",
+		postSpeechPaddingSeconds: "0.1",
+		minKeepSegmentSeconds: "0.3",
+	},
+};
 
 export default function RoughCutGuiPage() {
 	const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -32,6 +77,7 @@ export default function RoughCutGuiPage() {
 	const [result, setResult] = useState<GuiResult | null>(null);
 	const [renderPreview, setRenderPreview] = useState(true);
 	const [autoSilenceCut, setAutoSilenceCut] = useState(true);
+	const [cutStrength, setCutStrength] = useState<CutStrength>("natural");
 	const [trimStartSeconds, setTrimStartSeconds] = useState("0");
 	const [captionOffsetSeconds, setCaptionOffsetSeconds] = useState("-0.25");
 	const [maxWordsPerCaption, setMaxWordsPerCaption] = useState("4");
@@ -56,9 +102,18 @@ export default function RoughCutGuiPage() {
 		setResult(null);
 
 		try {
+			const cutSettings = CUT_STRENGTH_SETTINGS[cutStrength];
 			const body = new FormData();
 			body.set("video", videoFile);
 			body.set("autoSilenceCut", String(autoSilenceCut));
+			body.set("silenceThreshold", cutSettings.silenceThreshold);
+			body.set(
+				"minSilenceDurationSeconds",
+				cutSettings.minSilenceDurationSeconds,
+			);
+			body.set("preSpeechPaddingSeconds", cutSettings.preSpeechPaddingSeconds);
+			body.set("postSpeechPaddingSeconds", cutSettings.postSpeechPaddingSeconds);
+			body.set("minKeepSegmentSeconds", cutSettings.minKeepSegmentSeconds);
 			body.set("autoTranscribe", "true");
 			body.set("renderPreview", String(renderPreview));
 			body.set("captionStyle", "tiktok");
@@ -119,6 +174,24 @@ export default function RoughCutGuiPage() {
 						</label>
 
 						<div className="grid gap-4 sm:grid-cols-4">
+							<label className="flex flex-col gap-2 text-sm">
+								<span className="font-medium">Cut strength</span>
+								<select
+									value={cutStrength}
+									onChange={(event) =>
+										setCutStrength(event.currentTarget.value as CutStrength)
+									}
+									className="border-input bg-background rounded-md border px-3 py-2"
+								>
+									{Object.entries(CUT_STRENGTH_SETTINGS).map(
+										([value, settings]) => (
+											<option key={value} value={value}>
+												{settings.label}
+											</option>
+										),
+									)}
+								</select>
+							</label>
 							<label className="flex flex-col gap-2 text-sm">
 								<span className="font-medium">Trim start</span>
 								<input

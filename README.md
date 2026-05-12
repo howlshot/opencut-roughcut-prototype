@@ -76,10 +76,15 @@ http://localhost:3000/automation/roughcut-gui
 
 1. Choose a local video file.
 2. Leave `Cut dead air` enabled.
-3. Leave `Trim start` at `0` unless you explicitly want to remove the opening.
-4. Keep `Render burned-caption preview` enabled if you want a quick visual timing check.
-5. Click `Generate files`.
-6. Import these generated files into CapCut:
+3. Choose a `Cut strength`:
+   - `Smooth` keeps more breathing room.
+   - `Natural` is the default.
+   - `Tight` removes shorter pauses.
+   - `Hard` uses minimal padding for faster jump cuts.
+4. Leave `Trim start` at `0` unless you explicitly want to remove the opening.
+5. Keep `Render burned-caption preview` enabled if you want a quick visual timing check.
+6. Click `Generate files`.
+7. Import these generated files into CapCut:
    - `capcut-clean.mp4`
    - `captions.srt`
 
