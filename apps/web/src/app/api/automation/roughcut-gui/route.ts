@@ -7,7 +7,11 @@ import {
 	silenceRangesToKeepSegments,
 } from "@/automation/roughcut/silence";
 import { transcriptToTimelineCaptions } from "@/automation/roughcut/transcription";
-import { detectSilenceRanges, probeVideoMetadata } from "../../../../../scripts/roughcut/ffmpeg";
+import {
+	detectSilenceRanges,
+	probeVideoMetadata,
+	runProcess,
+} from "../../../../../scripts/roughcut/ffmpeg";
 import { roughCutCaptionsToSrt } from "../../../../../scripts/roughcut/export-srt";
 import { renderRoughCutWithFfmpeg } from "../../../../../scripts/roughcut/render-ffmpeg";
 import { transcribeWithCli } from "../../../../../scripts/roughcut/transcription-cli";
@@ -125,6 +129,7 @@ export async function POST(request: NextRequest) {
 		const previewVideoPath = options.renderPreview
 			? join(outputDir, "preview-burned-captions.mp4")
 			: null;
+		const bundlePath = join(outputDir, "roughcut-files.zip");
 
 		await writeFile(roughcutPath, `${JSON.stringify(roughCut, null, 2)}\n`, "utf8");
 		if (transcript && transcriptPath) {
@@ -149,6 +154,16 @@ export async function POST(request: NextRequest) {
 				burnCaptions: true,
 			});
 		}
+		await createBundleArchive({
+			bundlePath,
+			files: [
+				cleanVideoPath,
+				srtPath,
+				roughcutPath,
+				...(transcriptPath ? [transcriptPath] : []),
+				...(previewVideoPath ? [previewVideoPath] : []),
+			],
+		});
 
 		return Response.json({
 			outputDir,
@@ -165,6 +180,7 @@ export async function POST(request: NextRequest) {
 					roughCut.clips.reduce((total, clip) => total + clip.durationSeconds, 0),
 			},
 			files: {
+				bundle: fileResult({ path: bundlePath }),
 				cleanVideo: fileResult({ path: cleanVideoPath }),
 				captions: fileResult({ path: srtPath }),
 				roughcut: fileResult({ path: roughcutPath }),
@@ -184,6 +200,24 @@ export async function POST(request: NextRequest) {
 			},
 			{ status: 500 },
 		);
+	}
+}
+
+async function createBundleArchive({
+	bundlePath,
+	files,
+}: {
+	bundlePath: string;
+	files: string[];
+}) {
+	const result = await runProcess({
+		command: "zip",
+		args: ["-j", bundlePath, ...files],
+		missingExecutableMessage:
+			"zip was not found. Install zip or download the generated files individually.",
+	});
+	if (result.exitCode !== 0) {
+		throw new Error(`Failed to create output bundle: ${result.stderr}`);
 	}
 }
 

@@ -21,13 +21,20 @@ export async function GET(request: NextRequest) {
 	return new Response(data, {
 		headers: {
 			"Content-Type": contentTypeForPath({ path }),
-			"Content-Disposition": `inline; filename="${basename(path).replaceAll('"', "")}"`,
+			"Content-Disposition": `${contentDispositionForPath({ path })}; filename="${basename(path).replaceAll('"', "")}"`,
 		},
 	});
 }
 
+function contentDispositionForPath({ path }: { path: string }) {
+	return path.toLowerCase().endsWith(".zip") ? "attachment" : "inline";
+}
+
 function contentTypeForPath({ path }: { path: string }) {
 	const lowerPath = path.toLowerCase();
+	if (lowerPath.endsWith(".zip")) {
+		return "application/zip";
+	}
 	if (lowerPath.endsWith(".json")) {
 		return "application/json";
 	}

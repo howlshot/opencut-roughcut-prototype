@@ -9,6 +9,7 @@ This prototype takes a local video file and generates:
 - a transcript JSON
 - an intermediate rough-cut JSON
 - an optional burned-caption preview
+- a single `.zip` bundle containing the generated files
 
 It is built on top of the [OpenCut](https://github.com/OpenCut-app/OpenCut) web app while the automation pipeline is being explored. The current practical workflow is to use this app to generate a CapCut-ready rough cut, then polish the video and captions manually in CapCut.
 
@@ -93,6 +94,10 @@ The generated files are written under:
 ```text
 ~/Downloads/roughcut-gui/
 ```
+
+Each video gets its own timestamped folder. The GUI also creates
+`roughcut-files.zip` in that folder so you can download/share one bundle instead
+of grabbing files individually.
 
 ## CapCut Import
 

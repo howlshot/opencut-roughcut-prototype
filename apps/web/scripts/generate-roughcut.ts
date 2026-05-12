@@ -1,5 +1,6 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename, extname, join, resolve } from "node:path";
 import { generateRoughCutDocument } from "../src/automation/roughcut/generate";
 import {
 	protectSegmentsWithTranscriptWords,
@@ -16,6 +17,7 @@ import { transcribeWithCli } from "./roughcut/transcription-cli";
 
 interface CliOptions {
 	videoPath: string | null;
+	outputDirPath: string | null;
 	roughcutOutputPath: string | null;
 	transcriptOutputPath: string | null;
 	projectName: string;
@@ -44,8 +46,6 @@ interface CliOptions {
 	avoidSingleWordCaptions: boolean;
 }
 
-const DEFAULT_OUTPUT_PATH = "opencut-roughcut-v1.json";
-
 async function main() {
 	const options = parseArgs({ args: process.argv.slice(2) });
 	if (!options.videoPath) {
@@ -56,6 +56,7 @@ async function main() {
 	if (options.transcriptOutputPath && !options.autoTranscribe) {
 		throw new Error("--transcript-out requires --auto-transcribe.");
 	}
+	const outputPaths = await resolveOutputPaths({ options });
 
 	const subtitleInput = options.subtitlePath
 		? await readFile(options.subtitlePath, "utf8")
@@ -118,18 +119,15 @@ async function main() {
 				})
 			: undefined;
 
-	if (options.transcriptOutputPath && transcript) {
+	if (outputPaths.transcriptOutputPath && transcript) {
 		await writeJsonFile({
-			path: options.transcriptOutputPath,
+			path: outputPaths.transcriptOutputPath,
 			value: transcript,
 		});
-		console.log(`Wrote ${resolve(options.transcriptOutputPath)}`);
+		console.log(`Wrote ${resolve(outputPaths.transcriptOutputPath)}`);
 	}
 
-	const roughcutOutputPath =
-		options.roughcutOutputPath ??
-		(options.transcriptOutputPath ? null : DEFAULT_OUTPUT_PATH);
-	if (!roughcutOutputPath) {
+	if (!outputPaths.roughcutOutputPath) {
 		return;
 	}
 
@@ -148,14 +146,18 @@ async function main() {
 		captions,
 	});
 
-	await writeJsonFile({ path: roughcutOutputPath, value: document });
+	await writeJsonFile({ path: outputPaths.roughcutOutputPath, value: document });
 
-	console.log(`Wrote ${resolve(roughcutOutputPath)}`);
+	console.log(`Wrote ${resolve(outputPaths.roughcutOutputPath)}`);
+	if (outputPaths.outputDirPath) {
+		console.log(`Output folder: ${resolve(outputPaths.outputDirPath)}`);
+	}
 }
 
 export function parseArgs({ args }: { args: string[] }): CliOptions {
 	const options: CliOptions = {
 		videoPath: null,
+		outputDirPath: null,
 		roughcutOutputPath: null,
 		transcriptOutputPath: null,
 		projectName: "TikTok rough cut",
@@ -191,6 +193,10 @@ export function parseArgs({ args }: { args: string[] }): CliOptions {
 		switch (arg) {
 			case "--video":
 				options.videoPath = requireValue({ flag: arg, value });
+				index += 1;
+				break;
+			case "--output-dir":
+				options.outputDirPath = requireValue({ flag: arg, value });
 				index += 1;
 				break;
 			case "--out":
@@ -323,6 +329,56 @@ export function parseArgs({ args }: { args: string[] }): CliOptions {
 	return options;
 }
 
+async function resolveOutputPaths({
+	options,
+}: {
+	options: CliOptions;
+}): Promise<{
+	outputDirPath: string | null;
+	roughcutOutputPath: string | null;
+	transcriptOutputPath: string | null;
+}> {
+	const shouldUseOutputDir =
+		Boolean(options.outputDirPath) ||
+		(!options.roughcutOutputPath && !options.transcriptOutputPath);
+	if (!shouldUseOutputDir) {
+		return {
+			outputDirPath: null,
+			roughcutOutputPath: options.roughcutOutputPath,
+			transcriptOutputPath: options.transcriptOutputPath,
+		};
+	}
+
+	const outputDirPath =
+		options.outputDirPath ??
+		join(
+			homedir(),
+			"Downloads",
+			"roughcut-cli",
+			`${safeBaseName({ path: options.videoPath ?? "video" })}-${Date.now()}`,
+		);
+	await mkdir(outputDirPath, { recursive: true });
+	return {
+		outputDirPath,
+		roughcutOutputPath:
+			options.roughcutOutputPath ?? join(outputDirPath, "roughcut.json"),
+		transcriptOutputPath:
+			options.transcriptOutputPath ??
+			(options.autoTranscribe ? join(outputDirPath, "transcript.json") : null),
+	};
+}
+
+function safeBaseName({ path }: { path: string }) {
+	const name = basename(path, extname(path)) || "video";
+	return (
+		name
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "")
+			.slice(0, 48) || "video"
+	);
+}
+
 function requireValue({
 	flag,
 	value,
@@ -411,7 +467,8 @@ function printUsage() {
   bun apps/web/scripts/generate-roughcut.ts --video input.mp4 [options]
 
 Options:
-  --out path                  Rough-cut JSON path alias. Default: ${DEFAULT_OUTPUT_PATH}
+  --output-dir path           Folder for generated JSON files. Default: ~/Downloads/roughcut-cli/<video>-<timestamp>
+  --out path                  Rough-cut JSON path alias
   --roughcut-out path         Rough-cut JSON output path
   --transcript-out path       Transcript JSON output path. Requires --auto-transcribe
   --project-name name         Project name. Default: TikTok rough cut

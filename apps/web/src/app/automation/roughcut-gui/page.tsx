@@ -15,6 +15,7 @@ interface GuiResult {
 		removedDuration: number;
 	};
 	files: {
+		bundle: FileLink;
 		cleanVideo: FileLink;
 		captions: FileLink;
 		roughcut: FileLink;
@@ -326,6 +327,7 @@ function Results({ result }: { result: GuiResult }) {
 			</div>
 
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				<FileAction label="Download all files (.zip)" file={result.files.bundle} />
 				<FileAction label="Clean MP4 for CapCut" file={result.files.cleanVideo} />
 				<FileAction label="Editable SRT captions" file={result.files.captions} />
 				<FileAction label="Rough-cut JSON" file={result.files.roughcut} />
