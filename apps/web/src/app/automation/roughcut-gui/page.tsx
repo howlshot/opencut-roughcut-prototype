@@ -326,10 +326,21 @@ function Results({ result }: { result: GuiResult }) {
 				</p>
 			</div>
 
+			<div className="grid gap-3 sm:grid-cols-2">
+				<PrimaryFileAction
+					label="Download cut video"
+					description="Upload this MP4 to CapCut first"
+					file={result.files.cleanVideo}
+				/>
+				<PrimaryFileAction
+					label="Download subtitles"
+					description="Import this SRT as editable captions"
+					file={result.files.captions}
+				/>
+			</div>
+
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				<FileAction label="Download all files (.zip)" file={result.files.bundle} />
-				<FileAction label="Clean MP4 for CapCut" file={result.files.cleanVideo} />
-				<FileAction label="Editable SRT captions" file={result.files.captions} />
+				<FileAction label="All generated files (.zip)" file={result.files.bundle} />
 				<FileAction label="Rough-cut JSON" file={result.files.roughcut} />
 				{result.files.transcript ? (
 					<FileAction label="Transcript JSON" file={result.files.transcript} />
@@ -355,6 +366,31 @@ function Results({ result }: { result: GuiResult }) {
 				/>
 			)}
 		</section>
+	);
+}
+
+function PrimaryFileAction({
+	label,
+	description,
+	file,
+}: {
+	label: string;
+	description: string;
+	file: FileLink;
+}) {
+	return (
+		<a
+			href={file.url}
+			target="_blank"
+			rel="noreferrer"
+			className="bg-primary text-primary-foreground hover:opacity-90 flex flex-col gap-2 rounded-md px-4 py-4 text-sm"
+		>
+			<span className="text-base font-semibold">{label}</span>
+			<span className="text-primary-foreground/80">{description}</span>
+			<span className="text-primary-foreground/70 break-all text-xs">
+				{file.path}
+			</span>
+		</a>
 	);
 }
 
